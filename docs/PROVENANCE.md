@@ -6,7 +6,7 @@
 
 - 上游：https://github.com/alanzhangcs/MonoCoP
 - 基准提交：`7d3932444f7ea94be564ae61a0b334fc6673213b`
-- 论文：https://arxiv.org/abs/2503.11651
+- 论文：https://arxiv.org/abs/2505.04594
 - 作者：Zhihao Zhang、Abhinav Kumar、Girish Chandar Ganesan、Xiaoming Liu。
 - LICENSE 中完整保留上游 MIT 版权与许可。嵌套依赖的许可也保留在原目录。
 - 保留 Git 历史和模型内部名称，不把上游贡献改记到新作者名下。
