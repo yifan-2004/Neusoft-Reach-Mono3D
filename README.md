@@ -1,24 +1,22 @@
 # Neusoft Reach Mono3D
 
-**单目 3D 目标检测与可视化工具。** 用单张 RGB 图像理解场景，将已保存的检测框转换为可离线打开的相机视图与鸟瞰图。
+**Monocular 3D detection research workspace with an offline prediction viewer.** Work with single-image RGB detection and turn saved 3D boxes into camera overlays and bird's-eye views that open in a browser.
 
-Monocular 3D detection research workspace with an offline prediction viewer.
+The publisher has confirmed authorization to use the Neusoft Reach name for this public project. The algorithm is based on the official MIT-licensed implementation of [MonoCoP](https://github.com/alanzhangcs/MonoCoP) (CVPR 2026). This edition adds visualization tools, synthetic examples, and documentation. Credit for the MonoCoP algorithm and paper belongs to its original authors; this repository is not the official MonoCoP release.
 
-本版本使用 Neusoft Reach（东软睿驰）名称，发布者已确认获准公开。算法基于 [MonoCoP](https://github.com/alanzhangcs/MonoCoP)（CVPR 2026）的官方 MIT 实现；新增可视化工具、人工样例与中文说明。MonoCoP 的算法与原论文归原作者所有；此仓库不是 MonoCoP 官方发布。
+## Visual preview
 
-## 先看效果
+[Official detection visualizations](https://alanzhangcs.github.io/monocop-page/#qualitative-results) · [Official project page](https://alanzhangcs.github.io/monocop-page/)
 
-[官方真实检测可视化](https://alanzhangcs.github.io/monocop-page/#qualitative-results) · [官方项目页](https://alanzhangcs.github.io/monocop-page/)
-
-以下检测图来自原作者项目页，未在本仓库重新推理：
+The image below comes from the original authors' project page. It was not produced by a new inference run in this repository:
 
 ![MonoCoP official qualitative results, by the original authors](https://alanzhangcs.github.io/monocop-page/static/images/vis.png)
 
-仓库自带 [离线几何演示](examples/geometry-demo.html)，下载后用浏览器打开。它使用**人工构造的框与背景**，展示投影和报告版式，不是模型效果。
+Download and open the included [offline geometry demo](examples/geometry-demo.html) in a browser. Its **boxes and background are synthetic**: it demonstrates projection and report layout, not model performance.
 
-## 不下载权重也能使用
+## Use the viewer without downloading weights
 
-生成演示只需要 Python 3 标准库，无需 PyTorch、GPU、数据集或权重：
+Generating the demo requires only the Python 3 standard library. It does not require PyTorch, a GPU, a dataset, or model weights:
 
 ```bash
 python3 tools/render_predictions.py \
@@ -27,7 +25,7 @@ python3 tools/render_predictions.py \
   --synthetic --output examples/geometry-demo.html
 ```
 
-已有 KITTI 格式预测文件时，可加入自己的图片：
+To visualize existing KITTI-format predictions with your own image:
 
 ```bash
 python3 tools/render_predictions.py \
@@ -37,23 +35,23 @@ python3 tools/render_predictions.py \
   --width 1242 --height 375 --output report.html
 ```
 
-尺寸应与实际图片一致。输入为 KITTI 相机坐标的 15/16 列标签或预测，尺寸顺序为 H/W/L，位置是框底面中心；标定使用 P2。鸟瞰图由同一组相机坐标框生成，无需 LiDAR。视图范围固定为横向 ±25 m、前方 0–50 m，边界外物体可能被裁切。
+Set the dimensions to match the actual image. Input labels or predictions must use KITTI's 15/16-field camera-coordinate format, with dimensions in H/W/L order and positions at the bottom center of each box. Projection uses P2 calibration. The bird's-eye view uses the same camera-coordinate boxes and requires no LiDAR. Its fixed range is ±25 m laterally and 0–50 m forward; objects outside this range may be clipped.
 
-## 官方报告的检测指标
+## Upstream reported benchmarks
 
-以下是**上游公开报告值，非本仓库复测结果**。本版本未下载权重或数据集，未执行训练、推理或模型评测。
+These are **publicly reported upstream values, not results reproduced by this repository**. No weights or datasets were downloaded, and no training, inference, or model evaluation was performed for this edition.
 
-| 数据划分 | 训练设置 | Car AP3D | 说明 |
+| Split | Training setup | Car AP3D | Notes |
 |---|---|---:|---|
-| KITTI validation | Car / Pedestrian / Cyclist | 23.72 | 上游模型库单值，难度口径待核对 |
-| KITTI validation | Car only | 24.05 | 上游模型库单值，难度口径待核对 |
-| KITTI test | 官方榜单结果 | 19.11 | Moderate，按上游 README 标注 |
+| KITTI validation | Car / Pedestrian / Cyclist | 23.72 | Single value in the upstream model zoo; difficulty is unspecified |
+| KITTI validation | Car only | 24.05 | Single value in the upstream model zoo; difficulty is unspecified |
+| KITTI test | Official leaderboard result | 19.11 | Moderate, as labeled in the upstream README |
 
-来源：[上游模型库](https://github.com/alanzhangcs/MonoCoP#model-zoo)。上游验证表头写 E/M/H，但每行只给一个数，此处不将其补成三项或擅自确定难度。
+Source: [upstream model zoo](https://github.com/alanzhangcs/MonoCoP#model-zoo). Its validation table has an E/M/H header but provides only one value per row. This table does not infer missing values or assign a difficulty to those entries.
 
-## 模型思路
+## Method overview
 
-下图根据原作者说明重新整理，是**概念图**，不表示完整网络拓扑。
+This **conceptual diagram** summarizes the authors' description; it is not a complete network topology.
 
 ```mermaid
 flowchart LR
@@ -66,19 +64,19 @@ flowchart LR
   B --> V[Camera view and bird eye view]
 ```
 
-## 训练与模型评测
+## Training and model evaluation
 
-保留原始模型目录、配置名和训练入口，便于核对实现与兼容权重。GPU 环境、KITTI 数据集和权重由使用者另行准备，详见 [官方安装与训练说明](docs/UPSTREAM_README.md)。本次未验证 CUDA 模型在本机 macOS 上运行。
+Original model directories, configuration names, and entry points are retained to support implementation review and checkpoint compatibility. Prepare a GPU environment, KITTI data, and weights separately; follow the [upstream installation and training instructions](docs/UPSTREAM_README.md). Running the CUDA model on the local macOS machine has not been validated.
 
 ```bash
 bash train.sh 0 --config config/monocop.yaml
 bash test.sh 0 --config config/monocop_test.yaml
 ```
 
-## 验证与来源
+## Validation and credits
 
-新增工具验证：`python3 -m unittest discover -s tests -v`。覆盖投影、近平面、KITTI 框底面中心、非法数值与页面转义；不验证模型精度。
+Run the viewer checks with `python3 -m unittest discover -s tests -v`. They cover projection, the near plane, KITTI bottom-center coordinates, invalid numeric values, and HTML escaping. They do not evaluate model accuracy.
 
-[上游来源与改动范围](docs/PROVENANCE.md) · [原论文](https://arxiv.org/abs/2503.11651) · [原始 README](docs/UPSTREAM_README.md) · [许可证](LICENSE)
+[Provenance and changes](docs/PROVENANCE.md) · [Original paper](https://arxiv.org/abs/2503.11651) · [Original README](docs/UPSTREAM_README.md) · [License](LICENSE)
 
-引用算法时请引用原论文。新增工具同样按 MIT 发布。
+Please cite the original paper when using the algorithm. The added tools are also released under MIT.
