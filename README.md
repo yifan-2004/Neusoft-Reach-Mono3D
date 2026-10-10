@@ -1,172 +1,84 @@
-<div align="center">
-<h1>Unleashing the Power of Chain-of-Prediction for Monocular 3D Object Detection</h1>
+# Neusoft Reach Mono3D
 
-<a href="https://arxiv.org/abs/2503.11651"><img src="https://img.shields.io/badge/arXiv-2503.11651-b31b1b" alt="arXiv"></a>
-<a href="https://alanzhangcs.github.io/monocop-page/"><img src="https://img.shields.io/badge/Project_Page-green" alt="Project Page"></a>
-<a href="https://huggingface.co/zhihao406/MonoCoP/tree/main"><img src='https://img.shields.io/badge/HuggingFace-Model-orange?logo=huggingface'></a>
-<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+**单目 3D 目标检测与可视化工具。** 用单张 RGB 图像理解场景，将已保存的检测框转换为可离线打开的相机视图与鸟瞰图。
 
-**[Michigan State University](https://cvlab.cse.msu.edu/) &nbsp;|&nbsp; [University of North Carolina at Chapel Hill](https://cs.unc.edu/)**
+Monocular 3D detection research workspace with an offline prediction viewer.
 
-[Zhihao Zhang](https://alanzhangcs.github.io/), [Abhinav Kumar](https://sites.google.com/view/abhinavkumar), [Girish Chandar Ganesan](https://girish1511.github.io/), [Xiaoming Liu](https://www.cse.msu.edu/~liuxm/index2.html)
+本版本使用 Neusoft Reach（东软睿驰）名称，发布者已确认获准公开。算法基于 [MonoCoP](https://github.com/alanzhangcs/MonoCoP)（CVPR 2026）的官方 MIT 实现；新增可视化工具、人工样例与中文说明。MonoCoP 的算法与原论文归原作者所有；此仓库不是 MonoCoP 官方发布。
 
-[CVPR 2026](https://cvpr.thecvf.com/Conferences/2026/)
+## 先看效果
 
-</div>
+[官方真实检测可视化](https://alanzhangcs.github.io/monocop-page/#qualitative-results) · [官方项目页](https://alanzhangcs.github.io/monocop-page/)
 
-<p align="center">
-  <img src="assets/teaser.png" alt="Overview of MonoCoP and its chain-of-prediction pipeline for monocular 3D object detection." width="100%">
-</p>
+以下检测图来自原作者项目页，未在本仓库重新推理：
 
-```bibtex
-@inproceedings{zhang2025unleashing,
-  title={Unleashing the Power of Chain-of-Prediction for Monocular 3D Object Detection},
-  author={Zhang, Zhihao and Kumar, Abhinav and Ganesan, Girish Chandar and Liu, Xiaoming},
-  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
-  year={2026}
-}
-```
+![MonoCoP official qualitative results, by the original authors](https://alanzhangcs.github.io/monocop-page/static/images/vis.png)
 
----
+仓库自带 [离线几何演示](examples/geometry-demo.html)，下载后用浏览器打开。它使用**人工构造的框与背景**，展示投影和报告版式，不是模型效果。
 
-## TL;DR
+## 不下载权重也能使用
 
-MonoCoP is a monocular 3D object detection framework that adaptively exploits inter-attribute correlations (depth, size, orientation) via a **Chain-of-Prediction (CoP)** module and an **Uncertainty-Guided Selector (UGS)**. It achieves state-of-the-art results on KITTI, nuScenes, and Waymo.
+生成演示只需要 Python 3 标准库，无需 PyTorch、GPU、数据集或权重：
 
----
-
-## Table of Contents
-- [Abstract](#abstract)
-- [Updates](#updates)
-- [Checklist](#checklist)
-- [Installation](#installation)
-- [Training & Evaluation](#training--evaluation)
-- [Model Zoo](#model-zoo)
-- [Acknowledgements](#acknowledgements)
-- [License](#license)
-
-
-
-## Abstract
-
-Monocular 3D detection (Mono3D) aims to infer 3D bounding boxes from a single RGB image. Without auxiliary sensors such as LiDAR, this task is inherently ill-posed since the 3D-to-2D projection introduces depth ambiguity. Previous works often predict 3D attributes (e.g., depth, size, and orientation) in parallel, overlooking that these attributes are inherently correlated through the 3D-to-2D projection. However, simply enforcing such correlations through sequential prediction can propagate errors across attributes, especially when objects are occluded or truncated, where inaccurate size or orientation predictions can further amplify depth errors. Therefore, neither parallel nor sequential prediction is optimal. In this paper, we propose **MonoCoP**, an adaptive framework that learns *when* and *how* to leverage inter-attribute correlations with two complementary designs. A Chain-of-Prediction (CoP) explores inter-attribute correlations through feature-level learning, propagation, and aggregation, while an Uncertainty-Guided Selector (UGS) dynamically switches between CoP and parallel paradigms for each object based on the predicted uncertainty. By combining their strengths, MonoCoP achieves state-of-the-art (SOTA) performance on KITTI, nuScenes, and Waymo, significantly improving depth accuracy, particularly for distant and challenging objects.
-
-
-
-
-## Updates
-- **[Mar 28, 2026]** Released pretrained models and checkpoints.
-- **[Mar 27, 2026]** Released official code and training logs.
-- **[Feb 12, 2026]** MonoCoP accepted at **CVPR 2026**.
-
-## Checklist
-
-- [x] Code release
-- [x] Pretrained models
-- [x] Training logs
-- [ ] nuScenes and Waymo dataset configs
-
-
-
-## Installation
-
-**1. Clone the repository and create the conda environment:**
 ```bash
-git clone git@github.com:alanzhangcs/MonoCoP.git
-cd MonoCoP
-
-conda create -n monocop python=3.9
-conda activate monocop
+python3 tools/render_predictions.py \
+  --predictions examples/synthetic_predictions.txt \
+  --calibration examples/synthetic_calib.txt \
+  --synthetic --output examples/geometry-demo.html
 ```
 
-**2. Install PyTorch and torchvision (CUDA 12.1):**
+已有 KITTI 格式预测文件时，可加入自己的图片：
+
 ```bash
-conda install pytorch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 pytorch-cuda=12.1 -c pytorch -c nvidia
+python3 tools/render_predictions.py \
+  --predictions /path/to/000001.txt \
+  --calibration /path/to/calib/000001.txt \
+  --image /path/to/image_2/000001.png \
+  --width 1242 --height 375 --output report.html
 ```
 
-**3. Install requirements and compile deformable attention:**
-```bash
-pip install -r requirements.txt
+尺寸应与实际图片一致。输入为 KITTI 相机坐标的 15/16 列标签或预测，尺寸顺序为 H/W/L，位置是框底面中心；标定使用 P2。鸟瞰图由同一组相机坐标框生成，无需 LiDAR。视图范围固定为横向 ±25 m、前方 0–50 m，边界外物体可能被裁切。
 
-cd lib/models/monocop/ops/
-bash make.sh
-cd ../../../..
+## 官方报告的检测指标
+
+以下是**上游公开报告值，非本仓库复测结果**。本版本未下载权重或数据集，未执行训练、推理或模型评测。
+
+| 数据划分 | 训练设置 | Car AP3D | 说明 |
+|---|---|---:|---|
+| KITTI validation | Car / Pedestrian / Cyclist | 23.72 | 上游模型库单值，难度口径待核对 |
+| KITTI validation | Car only | 24.05 | 上游模型库单值，难度口径待核对 |
+| KITTI test | 官方榜单结果 | 19.11 | Moderate，按上游 README 标注 |
+
+来源：[上游模型库](https://github.com/alanzhangcs/MonoCoP#model-zoo)。上游验证表头写 E/M/H，但每行只给一个数，此处不将其补成三项或擅自确定难度。
+
+## 模型思路
+
+下图根据原作者说明重新整理，是**概念图**，不表示完整网络拓扑。
+
+```mermaid
+flowchart LR
+  I[Single RGB image] --> F[Visual features and queries]
+  F --> P[Parallel attribute prediction]
+  F --> C[Chain of Prediction]
+  P --> U[Uncertainty guided selection]
+  C --> U
+  U --> B[3D boxes: depth, size, orientation]
+  B --> V[Camera view and bird eye view]
 ```
 
-**4. Prepare the KITTI dataset** under `data/KITTIDataset/` (matching `dataset.root_dir` in the config):
-```
-MonoCoP/
-├── config/
-├── data/
-│   └── KITTIDataset/
-│       ├── ImageSets/
-│       ├── training/
-│       │   ├── image_2/
-│       │   ├── label_2/
-│       │   └── calib/
-│       └── testing/
-│           ├── image_2/
-│           └── calib/
-```
+## 训练与模型评测
 
+保留原始模型目录、配置名和训练入口，便于核对实现与兼容权重。GPU 环境、KITTI 数据集和权重由使用者另行准备，详见 [官方安装与训练说明](docs/UPSTREAM_README.md)。本次未验证 CUDA 模型在本机 macOS 上运行。
 
-
-## Training & Evaluation
-
-**Training** (single GPU):
 ```bash
 bash train.sh 0 --config config/monocop.yaml
-```
-
-**Evaluation only:**
-```bash
 bash test.sh 0 --config config/monocop_test.yaml
 ```
 
-**Quick evaluation with a pretrained checkpoint** (set `trainer.pretrain_model` in the config to the downloaded checkpoint path, then run evaluation as above):
-```yaml
-# in config/monocop_test.yaml
-trainer:
-  pretrain_model: /path/to/checkpoint.pth
-```
+## 验证与来源
 
-By default, logs and checkpoints are saved under `outputs/.../` (see `trainer.save_path` in the config).
+新增工具验证：`python3 -m unittest discover -s tests -v`。覆盖投影、近平面、KITTI 框底面中心、非法数值与页面转义；不验证模型精度。
 
+[上游来源与改动范围](docs/PROVENANCE.md) · [原论文](https://arxiv.org/abs/2503.11651) · [原始 README](docs/UPSTREAM_README.md) · [许可证](LICENSE)
 
-
-## Model Zoo
-
-Pretrained checkpoints and training logs are available for download via the links below.
-
-### KITTI Val Set
-
-| Setting | Config | AP3D Car (E/M/H) | Checkpoint | Training log |
-|:---:|:---:|:---:|:---:|:---:|
-| KITTI (Car/Ped/Cyc) | `config/monocop.yaml` | 23.72 | [Model](https://huggingface.co/zhihao406/MonoCoP/tree/main) | [Log](assets/train1.log) |
-| KITTI (Car) | `config/monocop_car.yaml` | 24.05 | [Model](https://huggingface.co/zhihao406/MonoCoP/tree/main) | [Log](assets/train.log) |
-
-### KITTI Test Leaderboard
-
-| Setting | AP3D Car (Mod.) | KITTI Leaderboard | Checkpoint |
-|:---:|:---:|:---:|:---:|
-| KITTI | 19.11 | [Link](https://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d) | [Model](https://huggingface.co/zhihao406/MonoCoP/tree/main) |
-
-<p align="center">
-  <img src="assets/leaderboard.png" alt="KITTI leaderboard screenshot for MonoCoP." width="85%">
-</p>
-
-
-
-## Acknowledgements
-
-This project builds upon and adapts components from several excellent open-source works:
-[DEVIANT](https://github.com/abhi1kumar/DEVIANT),
-[MonoDETR](https://github.com/ZrrSkywalker/MonoDETR),
-[MonoDGP](https://github.com/PuFanqi23/MonoDGP),
-[DETR](https://github.com/facebookresearch/detr), and
-[Deformable DETR](https://github.com/fundamentalvision/Deformable-DETR).
-We thank the authors for making their code publicly available.
-
-## License
-
-This project is licensed under the MIT License. See [`LICENSE`](LICENSE) for details.
+引用算法时请引用原论文。新增工具同样按 MIT 发布。
