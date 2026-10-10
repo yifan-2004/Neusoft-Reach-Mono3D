@@ -1,17 +1,16 @@
 # Neusoft Reach Mono3D
 
-**Monocular 3D detection research workspace with an offline prediction viewer.** Work with single-image RGB detection and turn saved 3D boxes into camera overlays and bird's-eye views that open in a browser.
+**Monocular RGB 3D detection with an offline prediction viewer.** Turn single-image 3D predictions into camera overlays and bird's-eye views. The viewer needs no LiDAR or model weights.
 
-## Visual preview
+## Preview
 
+[Offline geometry demo](examples/geometry-demo.html)
 
-(https://alanzhangcs.github.io/monocop-page/static/images/vis.png)
+The offline demo uses synthetic boxes and a synthetic background to demonstrate projection and layout.
 
-Download and open the included [offline geometry demo](examples/geometry-demo.html) in a browser. Its **boxes and background are synthetic**: it demonstrates projection and report layout, not model performance.
+## View predictions
 
-## Use the viewer without downloading weights
-
-Generating the demo requires only the Python 3 standard library. It does not require PyTorch, a GPU, a dataset, or model weights:
+The viewer requires only Python 3:
 
 ```bash
 python3 tools/render_predictions.py \
@@ -20,7 +19,7 @@ python3 tools/render_predictions.py \
   --synthetic --output examples/geometry-demo.html
 ```
 
-To visualize existing KITTI-format predictions with your own image:
+For your own predictions and image:
 
 ```bash
 python3 tools/render_predictions.py \
@@ -30,48 +29,33 @@ python3 tools/render_predictions.py \
   --width 1242 --height 375 --output report.html
 ```
 
-Set the dimensions to match the actual image. Input labels or predictions must use KITTI's 15/16-field camera-coordinate format, with dimensions in H/W/L order and positions at the bottom center of each box. Projection uses P2 calibration. The bird's-eye view uses the same camera-coordinate boxes and requires no LiDAR. Its fixed range is ±25 m laterally and 0–50 m forward; objects outside this range may be clipped.
+Use KITTI's 15/16-field camera-coordinate format, H/W/L dimensions, bottom-center positions and P2 calibration. Match the image dimensions. Bird's-eye range is ±25 m laterally and 0–50 m forward.
 
-## Upstream reported benchmarks
+## Reference results
 
-These are **publicly reported upstream values, not results reproduced by this repository**. No weights or datasets were downloaded, and no training, inference, or model evaluation was performed for this edition.
+| Split | Setup | Car AP3D |
+|---|---|---:|
+| KITTI validation | Car / Pedestrian / Cyclist | 23.72 |
+| KITTI validation | Car only | 24.05 |
+| KITTI test | Moderate | 19.11 |
 
-| Split | Training setup | Car AP3D | Notes |
-|---|---|---:|---|
-| KITTI validation | Car / Pedestrian / Cyclist | 23.72 | Single value in the upstream model zoo; difficulty is unspecified |
-| KITTI validation | Car only | 24.05 | Single value in the upstream model zoo; difficulty is unspecified |
-| KITTI test | Official leaderboard result | 19.11 | Moderate, as labeled in the upstream README |
+[Table reference](https://github.com/alanzhangcs/MonoCoP#model-zoo). Validation difficulty is unspecified. These reference results have not been reproduced here.
 
-Source: [upstream model zoo](https://github.com/alanzhangcs/MonoCoP#model-zoo). Its validation table has an E/M/H header but provides only one value per row. This table does not infer missing values or assign a difficulty to those entries.
+## Train and evaluate
 
-## Method overview
-
-This **conceptual diagram** summarizes the authors' description; it is not a complete network topology.
-
-```mermaid
-flowchart LR
-  I[Single RGB image] --> F[Visual features and queries]
-  F --> P[Parallel attribute prediction]
-  F --> C[Chain of Prediction]
-  P --> U[Uncertainty guided selection]
-  C --> U
-  U --> B[3D boxes: depth, size, orientation]
-  B --> V[Camera view and bird eye view]
-```
-
-## Training and model evaluation
-
-Original model directories, configuration names, and entry points are retained to support implementation review and checkpoint compatibility. Prepare a GPU environment, KITTI data, and weights separately; follow the [upstream installation and training instructions](docs/UPSTREAM_README.md). Running the CUDA model on the local macOS machine has not been validated.
+Prepare a CUDA environment, KITTI data and the required checkpoint. [Setup guide](docs/UPSTREAM_README.md).
 
 ```bash
 bash train.sh 0 --config config/monocop.yaml
 bash test.sh 0 --config config/monocop_test.yaml
 ```
 
-## Validation and credits
+Viewer checks cover projection, coordinates, invalid inputs and HTML escaping; they do not measure detector accuracy:
 
-Run the viewer checks with `python3 -m unittest discover -s tests -v`. They cover projection, the near plane, KITTI bottom-center coordinates, invalid numeric values, and HTML escaping. They do not evaluate model accuracy.
+```bash
+python3 -m unittest discover -s tests -v
+```
 
-[Provenance and changes](docs/PROVENANCE.md) · [Original paper](https://arxiv.org/abs/2503.11651) · [Original README](docs/UPSTREAM_README.md) · [License](LICENSE)
+## License
 
-Please cite the original paper when using the algorithm. The added tools are also released under MIT.
+[MIT](LICENSE) · [Source](https://github.com/alanzhangcs/MonoCoP) · [Paper](https://arxiv.org/abs/2503.11651)
