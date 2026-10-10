@@ -4,11 +4,8 @@
 
 ## Visual preview
 
-[Official detection visualizations](https://alanzhangcs.github.io/monocop-page/#qualitative-results) · [Official project page](https://alanzhangcs.github.io/monocop-page/)
 
-The image below comes from the original authors' project page. It was not produced by a new inference run in this repository:
-
-![MonoCoP official qualitative results, by the original authors](https://alanzhangcs.github.io/monocop-page/static/images/vis.png)
+(https://alanzhangcs.github.io/monocop-page/static/images/vis.png)
 
 Download and open the included [offline geometry demo](examples/geometry-demo.html) in a browser. Its **boxes and background are synthetic**: it demonstrates projection and report layout, not model performance.
 
