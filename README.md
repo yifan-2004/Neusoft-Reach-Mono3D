@@ -1,37 +1,54 @@
 # Neusoft Reach Mono3D
 
-**Monocular RGB 3D detection with an offline prediction viewer.** Turn single-image 3D predictions into camera overlays and bird's-eye views. The viewer needs no LiDAR or model weights.
+**Monocular RGB 3D detection with an offline prediction viewer.**
+
+Turn single-image 3D predictions into camera-view overlays and bird's-eye-view visualizations. The viewer works offline and does not require LiDAR or model weights.
 
 ## Preview
 
 [Offline geometry demo](examples/geometry-demo.html)
 
-The offline demo uses synthetic boxes and a synthetic background to demonstrate projection and layout.
+The offline demo uses synthetic 3D boxes and a synthetic background to demonstrate projection and visualization.
 
-## View predictions
+## View Predictions
 
-The viewer requires only Python 3:
+The viewer requires only Python 3.
 
 ```bash
 python3 tools/render_predictions.py \
   --predictions examples/synthetic_predictions.txt \
   --calibration examples/synthetic_calib.txt \
-  --synthetic --output examples/geometry-demo.html
+  --synthetic \
+  --output examples/geometry-demo.html
 ```
 
-For your own predictions and image:
+To visualize your own predictions:
 
 ```bash
 python3 tools/render_predictions.py \
   --predictions /path/to/000001.txt \
   --calibration /path/to/calib/000001.txt \
   --image /path/to/image_2/000001.png \
-  --width 1242 --height 375 --output report.html
+  --width 1242 \
+  --height 375 \
+  --output report.html
 ```
 
-Use KITTI's 15/16-field camera-coordinate format, H/W/L dimensions, bottom-center positions and P2 calibration. Match the image dimensions. Bird's-eye range is ±25 m laterally and 0–50 m forward.
+The viewer supports KITTI-style camera-coordinate predictions with:
 
-## Reference results
+- 15/16-field prediction format
+- H/W/L object dimensions
+- bottom-center 3D positions
+- P2 camera calibration
+
+Make sure the specified image dimensions match the input image.
+
+The bird's-eye-view visualization covers:
+
+- lateral range: ±25 m
+- forward range: 0–50 m
+
+## Reference Results
 
 | Split | Setup | Car AP3D |
 |---|---|---:|
@@ -39,23 +56,27 @@ Use KITTI's 15/16-field camera-coordinate format, H/W/L dimensions, bottom-cente
 | KITTI validation | Car only | 24.05 |
 | KITTI test | Moderate | 19.11 |
 
-[Table reference](https://github.com/alanzhangcs/MonoCoP#model-zoo). Validation difficulty is unspecified. These reference results have not been reproduced here.
+These values are provided as reference results and may vary depending on training settings, data preparation, and evaluation configuration.
 
-## Train and evaluate
+## Train and Evaluate
 
-Prepare a CUDA environment, KITTI data and the required checkpoint. [Setup guide](docs/UPSTREAM_README.md).
+Prepare a CUDA environment, KITTI dataset, and the required model checkpoint.
 
 ```bash
 bash train.sh 0 --config config/monocop.yaml
 bash test.sh 0 --config config/monocop_test.yaml
 ```
 
-Viewer checks cover projection, coordinates, invalid inputs and HTML escaping; they do not measure detector accuracy:
+## Testing
+
+Viewer tests cover projection, coordinate handling, invalid inputs, and HTML escaping.
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
+These tests validate the visualization pipeline and do not measure detector accuracy.
+
 ## License
 
-[MIT](LICENSE) · [Source](https://github.com/alanzhangcs/MonoCoP) · [Paper](https://arxiv.org/abs/2503.11651)
+[MIT](LICENSE)
