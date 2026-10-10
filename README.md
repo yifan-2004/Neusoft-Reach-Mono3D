@@ -2,8 +2,6 @@
 
 **Monocular 3D detection research workspace with an offline prediction viewer.** Work with single-image RGB detection and turn saved 3D boxes into camera overlays and bird's-eye views that open in a browser.
 
-The publisher has confirmed authorization to use the Neusoft Reach name for this public project. The algorithm is based on the official MIT-licensed implementation of [MonoCoP](https://github.com/alanzhangcs/MonoCoP) (CVPR 2026). This edition adds visualization tools, synthetic examples, and documentation. Credit for the MonoCoP algorithm and paper belongs to its original authors; this repository is not the official MonoCoP release.
-
 ## Visual preview
 
 [Official detection visualizations](https://alanzhangcs.github.io/monocop-page/#qualitative-results) · [Official project page](https://alanzhangcs.github.io/monocop-page/)
